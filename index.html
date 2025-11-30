@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AURELIA | Redefining Living</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400;700&family=Cinzel:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- React & Babel Support -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Import Map for Modules -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "framer-motion": "https://esm.sh/framer-motion@11.0.8",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0",
+    "@google/genai": "https://esm.sh/@google/genai@0.0.12",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              gold: {
+                100: '#F9F1D8',
+                300: '#EEDC9A',
+                400: '#D4AF37', // Classic Gold
+                500: '#B4941F',
+                600: '#8A7010',
+              },
+              obsidian: '#050505',
+              charcoal: '#0F0F0F',
+              marble: '#F5F5F0',
+            },
+            fontFamily: {
+              serif: ['"Playfair Display"', 'serif'],
+              sans: ['"Lato"', 'sans-serif'],
+              display: ['"Cinzel"', 'serif'],
+            },
+            backgroundImage: {
+              'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+            }
+          }
+        }
+      }
+      
+      // Polyfill process.env for the browser
+      window.process = {
+        env: {
+          // ENTER YOUR API KEY HERE IF YOU WANT THE AI TO WORK
+          API_KEY: '' 
+        }
+      };
+    </script>
+    
+    <style>
+      /* Smooth Scrolling Behavior */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Hide Default Cursor Globally */
+      body, a, button, input, select, textarea, .cursor-pointer {
+        cursor: none !important;
+      }
+
+      /* Custom Scrollbar for Chrome/Safari/Webkit */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #050505;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 0px;
+        border: 1px solid #050505;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #D4AF37;
+      }
+      
+      /* Glassmorphism & Utility */
+      .glass-panel {
+        background: rgba(5, 5, 5, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      
+      .text-glow {
+        text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+      }
+      
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+      
+      /* Selection Color */
+      ::selection {
+        background: #D4AF37;
+        color: #000;
+      }
+      
+      /* Smooth text rendering */
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    </style>
+  </head>
+  <body class="bg-obsidian text-marble antialiased overflow-x-hidden">
+    <div id="root"></div>
+
+    <!-- MAIN APP SCRIPT -->
+    <script type="text/babel" data-type="module">
+      import React, { useState, useEffect, useRef } from 'react';
+      import { createRoot } from 'react-dom/client';
+      import { motion, useScroll, useTransform, AnimatePresence, useSpring, useInView } from 'framer-motion';
+      import { Menu, X, ArrowRight, Instagram, Facebook, Linkedin, Mail, Phone, MapPin, ChevronDown, Award, Layers, PenTool, LayoutTemplate, XCircle, Coffee, Armchair, Palette, Hammer, Play, CheckCircle2, Sparkles, Send } from 'lucide-react';
+      import { GoogleGenAI } from "@google/genai";
+
+      // ----------------------------------------------------------------------
+      // CONSTANTS (Merged from constants.ts)
+      // ----------------------------------------------------------------------
+      
+      const PROJECTS = [
+        {
+          id: '1',
+          title: 'Obsidian Heights',
+          category: 'Residential Penthouse',
+          image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2653&auto=format&fit=crop', 
+          description: 'A study in dark tones and panoramic light. Featuring Italian marble floors and custom walnut joinery.',
+          year: '2024',
+          dimensions: '4,500 sq ft'
+        },
+        {
+          id: '2',
+          title: 'The Kyoto Sanctuary',
+          category: 'Hospitality & Spa',
+          image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=2574&auto=format&fit=crop',
+          description: 'Tranquility redefined through organic minimalism. Water features meet raw stone in this urban retreat.',
+          year: '2023',
+          dimensions: '12,000 sq ft'
+        },
+        {
+          id: '3',
+          title: 'Aurum Headquarters',
+          category: 'Commercial',
+          image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2301&auto=format&fit=crop',
+          description: 'Where productivity meets structural art. Open plan dynamics with private acoustic zones.',
+          year: '2023',
+          dimensions: '8,000 sq ft'
+        },
+        {
+          id: '4',
+          title: 'Villa Seraphina',
+          category: 'Coastal Residential',
+          image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2700&auto=format&fit=crop',
+          description: 'Mediterranean warmth with a modernist edge. Seamless indoor-outdoor living overlooking the Aegean.',
+          year: '2022',
+          dimensions: '6,200 sq ft'
+        },
+        {
+          id: '5',
+          title: 'Nocturne Lounge',
+          category: 'Hospitality',
+          image: 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?q=80&w=2670&auto=format&fit=crop',
+          description: 'A speakeasy concept utilizing velvet, brass, and ultra-low ambient lighting for intimate conversations.',
+          year: '2023',
+          dimensions: '3,000 sq ft'
+        },
+        {
+          id: '6',
+          title: 'Glass Horizon',
+          category: 'Residential',
+          image: 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?q=80&w=2674&auto=format&fit=crop',
+          description: 'Cantilevered architecture overlooking the ocean. Glass and steel minimalism at its finest.',
+          year: '2024',
+          dimensions: '7,500 sq ft'
+        }
+      ];
+
+      const SERVICES = [
+        {
+          id: '1',
+          title: 'Luxury Residential',
+          description: 'Bespoke living environments tailored to your daily rituals and aesthetic desires.',
+          icon: 'Home',
+          image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2600&auto=format&fit=crop'
+        },
+        {
+          id: '2',
+          title: 'Commercial Turnkey',
+          description: 'End-to-end execution for high-impact business spaces that define brands.',
+          icon: 'Briefcase',
+          image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2301&auto=format&fit=crop'
+        },
+        {
+          id: '3',
+          title: 'Hospitality Interior',
+          description: 'Creating immersive guest experiences through spatial storytelling and sensory design.',
+          icon: 'Coffee',
+          image: 'https://images.unsplash.com/photo-1590430460236-412236a95574?q=80&w=2574&auto=format&fit=crop'
+        },
+        {
+          id: '4',
+          title: 'Custom Furniture',
+          description: 'Handcrafted pieces designed in-house to serve as the jewelry of the room.',
+          icon: 'Armchair',
+          image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=2670&auto=format&fit=crop'
+        },
+        {
+          id: '5',
+          title: 'Material Moodboards',
+          description: 'Curated textures, rare stones, and palettes sourced globally for your project.',
+          icon: 'Palette',
+          image: 'https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=2680&auto=format&fit=crop'
+        },
+        {
+          id: '6',
+          title: 'Turnkey Contracting',
+          description: 'From blueprint to final styling, we handle the chaos so you enjoy the creation.',
+          icon: 'Hammer',
+          image: 'https://images.unsplash.com/photo-1581094794329-cd1361daca69?q=80&w=2670&auto=format&fit=crop'
+        }
+      ];
+
+      const TESTIMONIALS = [
+        {
+          id: '1',
+          name: 'Alexander Vance',
+          role: 'CEO, Vertex Holdings',
+          text: 'Aurelia didn’t just design our office; they engineered a culture. The attention to detail is bordering on obsessive. It feels like walking into the future.'
+        },
+        {
+          id: '2',
+          name: 'Elena & Marcus Thorne',
+          role: 'Private Estate Owners',
+          text: 'Walking into our home now feels like stepping into a magazine that was written just for us. Absolutely transcendent work that honors the architecture.'
+        },
+        {
+          id: '3',
+          name: 'Sarah Jenkins',
+          role: 'Founder, Elysium Hotels',
+          text: 'They understand luxury not as a price point, but as a feeling. The flow, the lighting, the textures—flawless execution from start to finish.'
+        }
+      ];
+
+      const STATS = [
+        { label: "Completed Projects", value: "100+" },
+        { label: "Design Awards", value: "14" },
+        { label: "Years Experience", value: "12" },
+        { label: "Cities Active", value: "08" }
+      ];
+
+      const FOUNDER = {
+        name: "Isabella Aurelia",
+        role: "Principal Architect",
+        bio: "Architecture is not about shelter. It is about staging life. I believe in spaces that pause time, evoke emotion, and breathe with their inhabitants.",
+        image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2864&auto=format&fit=crop"
+      };
+
+      // ----------------------------------------------------------------------
+      // GEMINI SERVICE (Merged from services/geminiService.ts)
+      // ----------------------------------------------------------------------
+
+      // Ensure API Key is available from window.process.env (Polyfill)
+      const apiKey = window.process?.env?.API_KEY || '';
+      
+      // Initialize only if key exists, otherwise we handle errors gracefully
+      let ai = null;
+      if (apiKey) {
+        try {
+          ai = new GoogleGenAI({ apiKey });
+        } catch (e) {
+          console.warn("Google GenAI failed to initialize", e);
+        }
+      }
+
+      const generateDesignAdvice = async (query) => {
+        if (!apiKey || !ai) {
+          return "I am currently disconnected from the design mainframe. Please configure my API key in the HTML source code.";
+        }
+
+        try {
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `You are Aurelia, a world-class senior interior architect and visionary. 
+                    Your tone is luxurious, minimal, sophisticated, and slightly poetic. 
+                    You provide brief, high-level design advice, material pairings, or philosophical thoughts on space.
+                    Keep responses under 60 words.
+                    
+                    User Query: ${query}`
+                  }
+                ]
+              }
+            ],
+            config: {
+              temperature: 0.7,
+            }
+          });
+
+          return response.text || "Design requires contemplation. Let me think deeper.";
+        } catch (error) {
+          console.error("Gemini API Error:", error);
+          return "The connection to the architectural archive is momentarily hazy.";
+        }
+      };
+
+      // ----------------------------------------------------------------------
+      // COMPONENTS
+      // ----------------------------------------------------------------------
+
+      // --- AI Architect Widget ---
+      const AIArchitect = () => {
+        const [isOpen, setIsOpen] = useState(false);
+        const [query, setQuery] = useState('');
+        const [response, setResponse] = useState(null);
+        const [loading, setLoading] = useState(false);
+        const inputRef = useRef(null);
+
+        useEffect(() => {
+          if (isOpen && inputRef.current) {
+            inputRef.current.focus();
+          }
+        }, [isOpen]);
+
+        const handleAsk = async () => {
+          if (!query.trim()) return;
+          setLoading(true);
+          setResponse(null);
+          try {
+            const result = await generateDesignAdvice(query);
+            setResponse(result);
+          } catch (e) {
+            setResponse("My vision is currently clouded. Please try again.");
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const handleKeyDown = (e) => {
+          if (e.key === 'Enter') handleAsk();
+        };
+
+        return (
+          <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end pointer-events-none">
+            <div className="pointer-events-auto">
+              <AnimatePresence>
+                {isOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                    className="mb-4 w-80 md:w-96 glass-panel rounded-sm p-6 shadow-2xl border-l-2 border-gold-400"
+                  >
+                    <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                      <h3 className="font-serif text-lg text-gold-300 italic">Aurelia AI</h3>
+                      <button onClick={() => setIsOpen(false)} className="text-white/50 hover:text-white">
+                        <X size={18} />
+                      </button>
+                    </div>
+
+                    <div className="min-h-[100px] mb-4 text-sm leading-relaxed text-gray-300">
+                      {!response && !loading && (
+                        <p className="opacity-60">"Ask me about material pairings, color psychology, or spatial harmony..."</p>
+                      )}
+                      {loading && (
+                        <div className="flex items-center space-x-2 text-gold-400 animate-pulse">
+                          <Sparkles size={16} />
+                          <span>Consulting the archives...</span>
+                        </div>
+                      )}
+                      {response && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="prose prose-invert prose-sm"
+                        >
+                          "{response}"
+                        </motion.div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 border-t border-white/10 pt-4">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Design query..."
+                        className="bg-transparent border-none w-full text-white placeholder-white/30 focus:ring-0 focus:outline-none text-sm"
+                      />
+                      <button 
+                        onClick={handleAsk}
+                        disabled={loading}
+                        className="p-2 bg-gold-600/20 hover:bg-gold-600/40 rounded-full transition-colors text-gold-400"
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsOpen(!isOpen)}
+                className="bg-obsidian/80 backdrop-blur-md border border-gold-400/30 text-gold-400 p-4 rounded-full shadow-lg group relative overflow-hidden"
+              >
+                <span className="absolute inset-0 bg-gold-400/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                {isOpen ? <X size={24} /> : <Sparkles size={24} />}
+              </motion.button>
+            </div>
+          </div>
+        );
+      };
+
+      // --- Custom Cursor ---
+      const CustomCursor = () => {
+        const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+        const [isHovering, setIsHovering] = useState(false);
+
+        useEffect(() => {
+          const updateMousePosition = (e) => {
+            setMousePosition({ x: e.clientX, y: e.clientY });
+            
+            // Check if hovering over clickable element
+            const target = e.target;
+            const isClickable = target.closest('a, button, input, textarea, select, .cursor-pointer');
+            setIsHovering(!!isClickable);
+          };
+
+          window.addEventListener('mousemove', updateMousePosition);
+          return () => window.removeEventListener('mousemove', updateMousePosition);
+        }, []);
+
+        return (
+          <motion.div
+            className="fixed top-0 left-0 pointer-events-none z-[100] hidden md:block mix-blend-difference"
+            animate={{
+              x: mousePosition.x - (isHovering ? 24 : 8),
+              y: mousePosition.y - (isHovering ? 24 : 8),
+              scale: isHovering ? 1.2 : 1,
+            }}
+            transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+          >
+            <div 
+              className={`rounded-full border border-gold-400 transition-all duration-300 ${isHovering ? 'w-12 h-12 bg-gold-400/20' : 'w-4 h-4 bg-gold-400'}`}
+            />
+          </motion.div>
+        );
+      };
+
+      // --- Animation Variants ---
+      const fadeInUp = {
+        hidden: { opacity: 0, y: 60 },
+        visible: { 
+          opacity: 1, 
+          y: 0, 
+          transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } 
+        }
+      };
+
+      const staggerContainer = {
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0.15,
+            delayChildren: 0.2
+          }
+        }
+      };
+
+      // --- Utility Components ---
+      const SectionHeading = ({ sub, title, align = 'center', light = false }) => (
+        <div className={`mb-16 ${align === 'center' ? 'text-center' : 'text-left'} overflow-hidden`}>
+          <motion.div
+            initial={{ y: "100%" }}
+            whileInView={{ y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, ease: "circOut" }}
+          >
+            <span className="text-gold-400 tracking-[0.3em] uppercase text-xs md:text-sm font-semibold block mb-4">
+              {sub}
+            </span>
+          </motion.div>
+          <motion.h2 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+            className={`font-serif text-4xl md:text-5xl lg:text-6xl ${light ? 'text-obsidian' : 'text-white'} leading-[1.1]`}
+          >
+            {title}
+          </motion.h2>
+          <motion.div 
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5, duration: 1 }}
+            className={`h-[1px] w-24 bg-gold-400 mt-6 ${align === 'center' ? 'mx-auto' : ''}`}
+          />
+        </div>
+      );
+
+      const AnimatedNumber = ({ value }) => {
+        const ref = useRef(null);
+        const isInView = useInView(ref, { once: true });
+        const numericValue = parseInt(value.replace(/\D/g, '')) || 0;
+        
+        const springValue = useSpring(0, { bounce: 0, duration: 2000 });
+        const [displayValue, setDisplayValue] = useState(0);
+
+        useEffect(() => {
+          if (isInView) {
+            springValue.set(numericValue);
+          }
+        }, [isInView, numericValue, springValue]);
+
+        useEffect(() => {
+          return springValue.on("change", (latest) => {
+            setDisplayValue(Math.floor(latest));
+          });
+        }, [springValue]);
+
+        return (
+          <span ref={ref}>
+            {displayValue}{value.replace(/[0-9]/g, '')}
+          </span>
+        );
+      };
+
+      // --- Page Sections ---
+      const Navbar = () => {
+        const [scrolled, setScrolled] = useState(false);
+        const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+        useEffect(() => {
+          const handleScroll = () => setScrolled(window.scrollY > 50);
+          window.addEventListener('scroll', handleScroll);
+          return () => window.removeEventListener('scroll', handleScroll);
+        }, []);
+
+        const navLinks = [
+          { name: 'About', href: '#about' },
+          { name: 'Services', href: '#services' },
+          { name: 'Portfolio', href: '#portfolio' },
+          { name: 'Process', href: '#process' },
+          { name: 'Founder', href: '#founder' },
+          { name: 'Contact', href: '#contact' },
+        ];
+
+        return (
+          <>
+            <nav className={`fixed top-0 w-full z-50 transition-all duration-700 ${scrolled ? 'py-4 glass-panel border-b border-white/5 shadow-2xl' : 'py-8 bg-transparent'}`}>
+              <div className="container mx-auto px-6 flex justify-between items-center">
+                <motion.a 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8 }}
+                  href="#" 
+                  className="font-display font-bold text-2xl tracking-[0.2em] text-white z-50 flex items-center gap-2 group cursor-pointer"
+                >
+                  AURELIA<span className="text-gold-400 text-3xl group-hover:animate-pulse">.</span>
+                </motion.a>
+
+                {/* Desktop Nav */}
+                <div className="hidden md:flex items-center space-x-12">
+                  {navLinks.map((link, i) => (
+                    <motion.a 
+                      key={link.name} 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * i + 0.5 }}
+                      href={link.href} 
+                      className="font-sans text-[11px] tracking-[0.2em] uppercase text-gray-300 hover:text-gold-400 transition-colors relative group cursor-pointer"
+                    >
+                      {link.name}
+                      <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-gold-400 transition-all duration-300 group-hover:w-full"></span>
+                    </motion.a>
+                  ))}
+                  <motion.a 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href="#contact" 
+                    className="px-6 py-3 border border-gold-400/30 text-gold-400 hover:bg-gold-400 hover:text-black transition-all duration-500 font-serif italic text-sm tracking-wide rounded-sm cursor-pointer"
+                  >
+                    Book Consultation
+                  </motion.a>
+                </div>
+
+                {/* Mobile Toggle */}
+                <button 
+                  className="md:hidden z-50 text-white p-2 cursor-pointer"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                  {mobileMenuOpen ? <X /> : <Menu />}
+                </button>
+              </div>
+            </nav>
+
+            <AnimatePresence>
+              {mobileMenuOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, clipPath: 'circle(0% at 100% 0%)' }}
+                  animate={{ opacity: 1, clipPath: 'circle(150% at 100% 0%)' }}
+                  exit={{ opacity: 0, clipPath: 'circle(0% at 100% 0%)' }}
+                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                  className="fixed inset-0 bg-obsidian z-40 flex flex-col justify-center items-center space-y-8"
+                >
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                  {navLinks.map((link, i) => (
+                    <motion.a 
+                      key={link.name}
+                      href={link.href}
+                      initial={{ opacity: 0, y: 40 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * i + 0.3 }}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-serif text-4xl text-white hover:text-gold-400 transition-colors relative group cursor-pointer"
+                    >
+                      <span className="relative z-10">{link.name}</span>
+                      <span className="absolute left-0 bottom-2 w-full h-3 bg-gold-400/20 -z-0 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
+                    </motion.a>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        );
+      };
+
+      const Hero = () => {
+        const { scrollY } = useScroll();
+        const y1 = useTransform(scrollY, [0, 500], [0, 200]);
+        const opacity = useTransform(scrollY, [0, 400], [1, 0]);
+        const scale = useTransform(scrollY, [0, 1000], [1, 1.2]);
+
+        return (
+          <section id="hero" className="relative h-screen w-full overflow-hidden flex items-center justify-center">
+            <motion.div style={{ scale }} className="absolute inset-0 z-0">
+              <video 
+                autoPlay 
+                muted 
+                loop 
+                playsInline
+                poster="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2653"
+                className="w-full h-full object-cover brightness-[0.3]"
+              >
+                <source src="https://videos.pexels.com/video-files/3773487/3773487-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+              </video>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-obsidian"></div>
+              <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+            </motion.div>
+
+            <motion.div 
+              style={{ y: y1, opacity }}
+              className="relative z-10 text-center px-4 max-w-6xl w-full"
+            >
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 1 }}
+                className="flex items-center justify-center gap-4 mb-8"
+              >
+                <div className="h-[1px] w-8 md:w-16 bg-gradient-to-r from-transparent to-gold-400"></div>
+                <p className="font-sans text-gold-400 tracking-[0.3em] text-[10px] md:text-sm uppercase">
+                  Luxury • Residential • Commercial
+                </p>
+                <div className="h-[1px] w-8 md:w-16 bg-gradient-to-l from-transparent to-gold-400"></div>
+              </motion.div>
+
+              <div className="overflow-hidden mb-8">
+                  <motion.h1 
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    transition={{ delay: 0.8, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                    className="font-serif text-5xl md:text-7xl lg:text-9xl text-white leading-[0.9] text-glow mix-blend-overlay"
+                  >
+                    Designing Spaces
+                  </motion.h1>
+              </div>
+              
+              <div className="overflow-hidden mb-12">
+                  <motion.h1 
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    transition={{ delay: 1, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                    className="font-serif text-5xl md:text-7xl lg:text-9xl text-white leading-[0.9] text-glow"
+                  >
+                     That <span className="italic text-gold-300 font-light relative inline-block">
+                       Redefine
+                       <motion.svg 
+                          className="absolute w-full h-3 -bottom-1 left-0 text-gold-400"
+                          viewBox="0 0 100 10"
+                          preserveAspectRatio="none"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ delay: 1.5, duration: 1 }}
+                       >
+                          <motion.path d="M0 5 Q 50 10 100 5" fill="transparent" stroke="currentColor" strokeWidth="2" />
+                       </motion.svg>
+                     </span> Living.
+                  </motion.h1>
+              </div>
+              
+              <motion.div
+                 initial={{ opacity: 0, y: 30 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ delay: 1.8, duration: 1 }}
+              >
+                 <a href="#portfolio" className="group relative inline-flex items-center gap-4 px-12 py-5 overflow-hidden rounded-sm bg-transparent border border-white/20 hover:border-gold-400 transition-all duration-500 cursor-pointer">
+                   <div className="absolute inset-0 w-0 bg-gold-400 transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
+                   <span className="relative text-white font-sans tracking-[0.2em] text-xs uppercase group-hover:text-gold-400 transition-colors">Explore the Experience</span>
+                   <ArrowRight className="relative text-gold-400 group-hover:translate-x-2 transition-transform duration-300" size={16} />
+                 </a>
+              </motion.div>
+            </motion.div>
+
+            <div className="absolute inset-0 pointer-events-none z-0">
+              {[...Array(15)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute bg-gold-400/30 rounded-full blur-[1px]"
+                  style={{
+                    width: Math.random() * 3 + 1,
+                    height: Math.random() * 3 + 1,
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    y: [0, -150, 0],
+                    opacity: [0, 0.8, 0],
+                  }}
+                  transition={{
+                    duration: Math.random() * 10 + 10,
+                    repeat: Infinity,
+                    ease: "linear",
+                    delay: Math.random() * 5
+                  }}
+                />
+              ))}
+            </div>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2.5, duration: 1 }}
+              className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-4"
+            >
+              <span className="text-[10px] uppercase tracking-widest text-white/40">Scroll</span>
+              <motion.div 
+                  animate={{ height: [0, 40, 0], y: [0, 10, 0] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="w-[1px] bg-gradient-to-b from-gold-400 to-transparent"
+              ></motion.div>
+            </motion.div>
+          </section>
+        );
+      };
+
+      const About = () => {
+        const containerRef = useRef(null);
+        const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start end", "end start"] });
+        const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
+        const rotate = useTransform(scrollYProgress, [0, 1], [0, 5]);
+
+        return (
+          <section id="about" ref={containerRef} className="py-32 relative bg-obsidian overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none opacity-20">
+               <svg width="100%" height="100%">
+                   <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                       <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(212, 175, 55, 0.1)" strokeWidth="0.5"/>
+                   </pattern>
+                   <rect width="100%" height="100%" fill="url(#grid)" />
+               </svg>
+            </div>
+            
+            <div className="container mx-auto px-6 relative z-10">
+              <div className="grid md:grid-cols-2 gap-20 items-center">
+                <motion.div 
+                  style={{ y, rotate }}
+                  className="relative perspective-1000"
+                >
+                  <motion.div 
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 1 }}
+                      className="absolute -top-6 -left-6 w-full h-full border border-gold-400/20 z-0"
+                  ></motion.div>
+                  
+                  <div className="relative overflow-hidden group shadow-2xl">
+                    <div className="absolute inset-0 bg-gold-600/10 z-10 group-hover:bg-transparent transition-colors duration-700"></div>
+                    <img 
+                      src="https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=2670&auto=format&fit=crop" 
+                      alt="Architect Vision" 
+                      className="w-full h-[600px] object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 ease-out"
+                    />
+                  </div>
+                  
+                  <motion.div 
+                    initial={{ opacity: 0, x: -50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5, type: "spring" }}
+                    className="absolute -bottom-12 -right-6 md:-left-12 bg-charcoal/90 backdrop-blur-md p-8 border-l-4 border-gold-400 shadow-2xl max-w-xs z-20"
+                  >
+                    <h4 className="text-white font-serif text-xl italic mb-3">"Design is intelligence made visible."</h4>
+                    <div className="flex items-center gap-2">
+                       <div className="w-8 h-[1px] bg-gold-400"></div>
+                       <p className="text-gold-400 text-xs font-sans tracking-widest uppercase">Philosophy</p>
+                    </div>
+                  </motion.div>
+                </motion.div>
+
+                <motion.div 
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={staggerContainer}
+                  className="space-y-10 pl-0 md:pl-12"
+                >
+                  <motion.div variants={fadeInUp}>
+                      <h2 className="font-serif text-5xl md:text-7xl text-white leading-[0.95]">
+                      We create spaces <br /> that feel like <span className="text-gold-400 italic">art</span>.
+                      </h2>
+                  </motion.div>
+                  
+                  <motion.div variants={fadeInUp} className="w-24 h-[1px] bg-gold-400"></motion.div>
+
+                  <div className="space-y-6">
+                    <motion.p variants={fadeInUp} className="font-sans text-gray-300 text-lg leading-relaxed font-light">
+                      At Aurelia, we believe architecture is not just about shelter, but about emotion. 
+                      Our philosophy is rooted in the balance of <span className="text-white font-medium">light, texture, and proportion</span>.
+                      We design for the human experience, crafting environments that inspire, calm, and elevate.
+                    </motion.p>
+                    <motion.p variants={fadeInUp} className="font-sans text-gray-400 text-base leading-relaxed font-light">
+                      From the initial sketch to the final styling, every stroke is intentional. 
+                      Every material is chosen for its narrative. We don't just fill spaces; we define them.
+                    </motion.p>
+                  </div>
+                  
+                  <motion.div variants={fadeInUp} className="flex flex-wrap gap-4 pt-4">
+                    {['Architecture', 'Interior', 'Landscape', 'Curation'].map((item) => (
+                      <div key={item} className="flex items-center gap-2 px-4 py-2 border border-white/10 rounded-full hover:border-gold-400 transition-colors cursor-default">
+                        <div className="w-1.5 h-1.5 rounded-full bg-gold-400"></div>
+                        <span className="text-[10px] uppercase tracking-widest text-gray-300">{item}</span>
+                      </div>
+                    ))}
+                  </motion.div>
+                </motion.div>
+              </div>
+            </div>
+          </section>
+        );
+      };
+
+      const Services = () => {
+        const icons = {
+          Home: <React.Fragment><LayoutTemplate size={32} /></React.Fragment>,
+          Briefcase: <React.Fragment><Layers size={32} /></React.Fragment>,
+          Coffee: <React.Fragment><Coffee size={32} /></React.Fragment>,
+          Armchair: <React.Fragment><Armchair size={32} /></React.Fragment>,
+          Palette: <React.Fragment><Palette size={32} /></React.Fragment>,
+          Hammer: <React.Fragment><Hammer size={32} /></React.Fragment>
+        };
+
+        return (
+          <section id="services" className="py-32 bg-[#080808] relative">
+            <div className="container mx-auto px-6">
+              <SectionHeading sub="Our Expertise" title="Curated Design Services" />
+
+              <motion.div 
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={staggerContainer}
+                className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 border border-white/5"
+              >
+                {SERVICES.map((service, index) => (
+                  <motion.div
+                    key={service.id}
+                    variants={fadeInUp}
+                    className="group relative bg-obsidian p-12 hover:bg-[#0c0c0c] transition-colors duration-500 overflow-hidden cursor-pointer"
+                  >
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-700 z-0">
+                      <img 
+                        src={service.image} 
+                        alt={service.title} 
+                        className="w-full h-full object-cover filter grayscale"
+                      />
+                    </div>
+
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-gold-400/5 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+                    
+                    <div className="absolute left-0 top-0 h-full w-[2px] bg-gold-400 transform scale-y-0 group-hover:scale-y-100 transition-transform duration-500 origin-top z-10"></div>
+
+                    <div className="relative z-10">
+                      <div className="text-gold-400 mb-8 opacity-60 group-hover:opacity-100 transition-all transform group-hover:-translate-y-2 duration-500 group-hover:scale-110 origin-left">
+                        {icons[service.icon]}
+                      </div>
+                      <h3 className="font-serif text-2xl text-white mb-4 group-hover:text-gold-100 transition-colors">{service.title}</h3>
+                      <p className="text-gray-500 text-sm leading-relaxed mb-8 group-hover:text-gray-300 transition-colors border-l border-white/10 pl-4">
+                        {service.description}
+                      </p>
+                      <div className="flex items-center gap-2 text-gold-400 text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
+                         <span>Learn More</span>
+                         <ArrowRight size={12} />
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </section>
+        );
+      };
+
+      const Portfolio = () => {
+        const [selectedProject, setSelectedProject] = useState(null);
+        const getProject = (id) => PROJECTS.find(p => p.id === id);
+
+        return (
+          <section id="portfolio" className="py-32 bg-obsidian relative">
+            <div className="container mx-auto px-6">
+              <div className="flex flex-col md:flex-row justify-between items-end mb-20">
+                 <SectionHeading sub="Selected Works" title={<>Architectural <span className="italic text-gray-500">Digest</span></>} align="left" />
+                 <motion.a 
+                   whileHover={{ x: 10 }}
+                   href="#" 
+                   className="hidden md:flex items-center gap-2 text-gray-400 hover:text-gold-400 transition-colors border-b border-transparent hover:border-gold-400 pb-1 mb-16 text-xs uppercase tracking-widest cursor-pointer"
+                 >
+                   View Complete Archive <ArrowRight size={14} />
+                 </motion.a>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8 md:gap-24">
+                {PROJECTS.map((project, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 100 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 1, delay: index * 0.2, ease: "easeOut" }}
+                    onClick={() => setSelectedProject(project.id)}
+                    className={`group cursor-pointer relative ${index % 2 !== 0 ? 'md:mt-32' : ''}`}
+                  >
+                    <div className="overflow-hidden aspect-[3/4] md:aspect-[4/3] relative rounded-sm shadow-2xl">
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10 duration-700"></div>
+                      
+                      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div className="w-24 h-24 rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center border border-white/20 transform scale-50 group-hover:scale-100 transition-transform duration-500 ease-out">
+                          <span className="text-white font-serif italic text-xl">View</span>
+                        </div>
+                      </div>
+
+                      <motion.img 
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        src={project.image} 
+                        alt={project.title} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    <div className="mt-8 flex justify-between items-end border-b border-white/10 pb-4 group-hover:border-gold-400/50 transition-colors duration-700">
+                      <div>
+                        <h3 className="font-serif text-3xl text-white group-hover:text-gold-300 transition-colors mb-2">{project.title}</h3>
+                        <p className="text-gray-500 text-xs tracking-widest uppercase">{project.category}</p>
+                      </div>
+                      <div className="text-right hidden md:block opacity-50 group-hover:opacity-100 transition-opacity">
+                         <p className="text-gold-400 text-xs uppercase tracking-widest mb-1">{project.year}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {selectedProject && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[60] flex items-center justify-center p-0 md:p-8 bg-black/95 backdrop-blur-xl"
+                >
+                  <button 
+                    onClick={() => setSelectedProject(null)} 
+                    className="absolute top-4 right-4 md:top-8 md:right-8 text-white/50 hover:text-gold-400 transition-colors z-50 bg-black/50 p-2 rounded-full backdrop-blur-md cursor-pointer"
+                  >
+                    <XCircle size={32} strokeWidth={1} />
+                  </button>
+                  
+                  <motion.div 
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1, duration: 0.5 }}
+                    className="w-full h-full max-w-7xl bg-obsidian border border-white/10 overflow-hidden flex flex-col md:flex-row shadow-2xl"
+                  >
+                    <div className="w-full md:w-2/3 h-[40vh] md:h-full relative group">
+                       <img 
+                          src={getProject(selectedProject)?.image} 
+                          alt="Detail" 
+                          className="w-full h-full object-cover"
+                       />
+                       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+                       
+                       <motion.div 
+                         initial={{ y: 20, opacity: 0 }}
+                         animate={{ y: 0, opacity: 1 }}
+                         transition={{ delay: 0.4 }}
+                         className="absolute bottom-8 left-8 flex gap-4"
+                       >
+                          <button className="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-gold-400 hover:text-black hover:border-gold-400 transition-all rounded-full group cursor-pointer">
+                             <Play size={16} fill="currentColor" className="group-hover:scale-110 transition-transform"/>
+                             <span className="text-xs uppercase tracking-widest font-bold">Cinematic Tour</span>
+                          </button>
+                       </motion.div>
+                    </div>
+                    
+                    <div className="w-full md:w-1/3 h-[60vh] md:h-full p-8 md:p-12 overflow-y-auto flex flex-col justify-between bg-[#080808]">
+                      <div>
+                        <motion.span 
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="text-gold-400 text-xs tracking-[0.3em] uppercase block mb-6"
+                        >
+                          {getProject(selectedProject)?.category}
+                        </motion.span>
+                        
+                        <motion.h2 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                          className="font-serif text-4xl md:text-5xl text-white leading-none mb-8"
+                        >
+                          {getProject(selectedProject)?.title}
+                        </motion.h2>
+                        
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="space-y-6"
+                        >
+                          <p className="text-gray-300 text-sm md:text-base leading-relaxed font-light font-sans border-l-2 border-gold-400/30 pl-6">
+                            {getProject(selectedProject)?.description}
+                          </p>
+                          <p className="text-gray-400 text-sm leading-relaxed">
+                            Designed with a focus on negative space and light interaction. The material palette features travertine, oxidized copper, and walnut wood to ground the ethereal architecture.
+                          </p>
+                        </motion.div>
+
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.6 }}
+                          className="grid grid-cols-2 gap-6 mt-12 py-8 border-t border-white/10"
+                        >
+                           <div>
+                              <p className="text-white/40 text-[10px] uppercase tracking-widest mb-2">Dimensions</p>
+                              <p className="font-serif text-xl text-white">{getProject(selectedProject)?.dimensions}</p>
+                           </div>
+                           <div>
+                              <p className="text-white/40 text-[10px] uppercase tracking-widest mb-2">Year</p>
+                              <p className="font-serif text-xl text-white">{getProject(selectedProject)?.year}</p>
+                           </div>
+                        </motion.div>
+                      </div>
+
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7 }}
+                        className="flex gap-4 mt-8"
+                      >
+                        <button className="flex-1 py-4 border border-white/20 text-white font-sans text-[10px] md:text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors cursor-pointer">
+                          Moodboard
+                        </button>
+                        <button className="flex-1 py-4 bg-gold-500 text-black font-sans text-[10px] md:text-xs uppercase tracking-widest hover:bg-white transition-colors font-bold cursor-pointer">
+                          Floor Plan
+                        </button>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
+        );
+      };
+
+      const Process = () => {
+        const steps = [
+          { num: '01', title: 'Concept Vision', desc: 'Understanding your rituals to draft the initial narrative.' },
+          { num: '02', title: 'Floor Plan & 3D', desc: 'Spatial optimization meeting photorealistic visualization.' },
+          { num: '03', title: 'Material Selection', desc: 'Sourcing rare stones, fabrics, and metals globally.' },
+          { num: '04', title: 'Execution', desc: 'Rigorous project management and precision joinery.' },
+          { num: '05', title: 'Styling & Handover', desc: 'The final layer of art, scent, and object curation.' },
+        ];
+
+        return (
+          <section id="process" className="py-32 bg-charcoal relative overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/graphy.png')]"></div>
+            
+            <div className="container mx-auto px-6 relative z-10">
+              <SectionHeading sub="The Journey" title="Signature Process" />
+
+              <div className="relative mt-24">
+                <div className="hidden md:block absolute top-12 left-0 w-full h-[1px] bg-white/10">
+                   <motion.div 
+                     initial={{ width: 0 }}
+                     whileInView={{ width: '100%' }}
+                     viewport={{ once: true }}
+                     transition={{ duration: 2, ease: "easeInOut" }}
+                     className="h-full bg-gold-400 shadow-[0_0_15px_rgba(212,175,55,0.5)]"
+                   />
+                </div>
+
+                <motion.div 
+                  variants={staggerContainer}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="grid md:grid-cols-5 gap-8"
+                >
+                  {steps.map((step, index) => (
+                    <motion.div
+                      key={index}
+                      variants={fadeInUp}
+                      className="relative z-10 group text-center md:text-left"
+                    >
+                      <div className="w-24 h-24 mx-auto md:mx-0 bg-obsidian border border-white/10 group-hover:border-gold-400 transition-colors flex items-center justify-center mb-8 relative z-20 shadow-xl group-hover:shadow-gold-400/20">
+                         <span className="font-serif text-3xl text-white group-hover:text-gold-400 transition-colors">{step.num}</span>
+                         
+                         <motion.div 
+                           initial={{ scale: 0 }}
+                           whileInView={{ scale: 1 }}
+                           transition={{ delay: 1 + (index * 0.2) }}
+                           className="hidden md:block absolute -top-[1px] -right-[1px] w-full h-full border border-gold-400 opacity-0 group-hover:opacity-100 animate-pulse"
+                         />
+                      </div>
+
+                      <h3 className="font-serif text-xl text-white mb-3">{step.title}</h3>
+                      <p className="text-gray-500 text-xs leading-relaxed">{step.desc}</p>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            </div>
+          </section>
+        );
+      };
+
+      const Stats = () => {
+        return (
+          <section className="py-24 bg-charcoal border-y border-white/5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+            <div className="container mx-auto px-6 relative z-10">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+                {STATS.map((stat, i) => (
+                  <div key={i} className="text-center group cursor-default">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
+                      className="font-serif text-5xl md:text-6xl text-white mb-4 group-hover:text-gold-400 transition-colors"
+                    >
+                      <AnimatedNumber value={stat.value} />
+                    </motion.div>
+                    <div className="flex flex-col items-center">
+                       <div className="w-8 h-[1px] bg-white/20 mb-3 group-hover:w-16 group-hover:bg-gold-400 transition-all duration-500"></div>
+                       <div className="text-[10px] uppercase tracking-[0.25em] text-gray-500 group-hover:text-white transition-colors">
+                          {stat.label}
+                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      };
+
+      const Founder = () => {
+        return (
+          <section id="founder" className="py-32 bg-obsidian relative overflow-hidden">
+            <div className="container mx-auto px-6">
+              <div className="flex flex-col md:flex-row gap-16 items-center">
+                <motion.div 
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  className="w-full md:w-1/2 relative"
+                >
+                   <div className="relative aspect-[4/5] overflow-hidden">
+                      <img src={FOUNDER.image} alt={FOUNDER.name} className="w-full h-full object-cover filter contrast-[1.1]" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-transparent to-transparent opacity-80"></div>
+                      <div className="absolute bottom-0 left-0 p-8">
+                         <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Signature_sample.svg" alt="Signature" className="w-48 invert opacity-80" />
+                      </div>
+                   </div>
+                   <div className="absolute -top-4 -right-4 w-32 h-32 border-t-2 border-r-2 border-gold-400/30"></div>
+                   <div className="absolute -bottom-4 -left-4 w-32 h-32 border-b-2 border-l-2 border-gold-400/30"></div>
+                </motion.div>
+                
+                <div className="w-full md:w-1/2 space-y-8">
+                   <SectionHeading sub="The Visionary" title="Meet the Mind" align="left" />
+                   
+                   <motion.h3 
+                     initial={{ opacity: 0 }}
+                     whileInView={{ opacity: 1 }}
+                     transition={{ delay: 0.3 }}
+                     className="font-serif text-3xl text-white italic"
+                   >
+                      {FOUNDER.name}, <span className="text-gold-400 text-xl not-italic tracking-widest uppercase">{FOUNDER.role}</span>
+                   </motion.h3>
+                   
+                   <motion.p 
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                      className="text-gray-300 text-lg font-light leading-relaxed"
+                   >
+                     "{FOUNDER.bio}"
+                   </motion.p>
+                   
+                   <motion.p 
+                     initial={{ opacity: 0 }}
+                     whileInView={{ opacity: 1 }}
+                     transition={{ delay: 0.6 }}
+                     className="text-gray-500 font-sans leading-relaxed"
+                   >
+                     With over a decade of redefining luxury landscapes across Europe and Asia, Isabella combines classical architectural principles with avant-garde minimalism. Her work is not just seen, but felt.
+                   </motion.p>
+                   
+                   <motion.div 
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ delay: 0.8 }}
+                      className="pt-8"
+                   >
+                      <button className="text-gold-400 uppercase text-xs tracking-[0.3em] hover:text-white transition-colors flex items-center gap-4 cursor-pointer">
+                        Read Full Biography <div className="w-12 h-[1px] bg-gold-400"></div>
+                      </button>
+                   </motion.div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      };
+
+      const Testimonials = () => {
+        const [activeIndex, setActiveIndex] = useState(0);
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+            setActiveIndex((prev) => (prev + 1) % TESTIMONIALS.length);
+          }, 6000);
+          return () => clearInterval(interval);
+        }, []);
+
+        return (
+          <section className="py-32 bg-charcoal relative">
+            <div className="absolute inset-0 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2700" alt="bg" className="w-full h-full object-cover blur-sm opacity-20" />
+              <div className="absolute inset-0 bg-black/80"></div>
+            </div>
+            
+            <div className="container mx-auto px-6 relative z-10 text-center max-w-4xl">
+               <Award className="w-12 h-12 text-gold-400 mx-auto mb-8 opacity-80" />
+               
+               <div className="h-[300px] flex items-center justify-center relative">
+                 <AnimatePresence mode="wait">
+                   <motion.div
+                     key={activeIndex}
+                     initial={{ opacity: 0, y: 20, rotateX: -90 }}
+                     animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                     exit={{ opacity: 0, y: -20, rotateX: 90 }}
+                     transition={{ duration: 0.8 }}
+                     className="space-y-8"
+                   >
+                     <h3 className="font-serif text-3xl md:text-5xl text-white leading-tight italic">
+                       "{TESTIMONIALS[activeIndex].text}"
+                     </h3>
+                     <div>
+                       <p className="text-gold-400 text-sm tracking-[0.2em] uppercase font-bold mb-2">
+                         {TESTIMONIALS[activeIndex].name}
+                       </p>
+                       <p className="text-white/40 text-xs uppercase tracking-widest">
+                         {TESTIMONIALS[activeIndex].role}
+                       </p>
+                     </div>
+                   </motion.div>
+                 </AnimatePresence>
+               </div>
+               
+               <div className="flex justify-center gap-3 mt-8">
+                 {TESTIMONIALS.map((_, i) => (
+                   <button
+                     key={i}
+                     onClick={() => setActiveIndex(i)}
+                     className={`w-2 h-2 rounded-full transition-all duration-500 cursor-pointer ${i === activeIndex ? 'bg-gold-400 w-8' : 'bg-white/20'}`}
+                   />
+                 ))}
+               </div>
+            </div>
+          </section>
+        );
+      };
+
+      const Contact = () => {
+        return (
+          <section id="contact" className="py-32 bg-obsidian text-white relative">
+            <div className="container mx-auto px-6">
+              <div className="grid md:grid-cols-2 gap-16">
+                <div>
+                  <SectionHeading sub="Inquiries" title="Begin Your Legacy" align="left" />
+                  <p className="text-gray-400 mb-12 font-light max-w-md">
+                    We accept a limited number of commissions per year to ensure absolute dedication to craft.
+                  </p>
+                  
+                  <form className="space-y-8">
+                    <div className="group">
+                      <input type="text" placeholder="Name" className="w-full bg-transparent border-b border-white/20 py-4 focus:outline-none focus:border-gold-400 transition-colors placeholder-white/20 text-lg cursor-none" />
+                    </div>
+                    <div className="group">
+                      <input type="email" placeholder="Email" className="w-full bg-transparent border-b border-white/20 py-4 focus:outline-none focus:border-gold-400 transition-colors placeholder-white/20 text-lg cursor-none" />
+                    </div>
+                    <div className="group">
+                      <select className="w-full bg-transparent border-b border-white/20 py-4 focus:outline-none focus:border-gold-400 transition-colors text-white/50 text-lg cursor-none">
+                        <option className="bg-obsidian">Project Type</option>
+                        <option className="bg-obsidian">Residential</option>
+                        <option className="bg-obsidian">Commercial</option>
+                        <option className="bg-obsidian">Hospitality</option>
+                      </select>
+                    </div>
+                    <div className="pt-8">
+                      <button className="px-12 py-4 bg-white text-black hover:bg-gold-400 transition-colors uppercase tracking-widest text-xs font-bold cursor-pointer">
+                        Request Consultation
+                      </button>
+                    </div>
+                  </form>
+                </div>
+                
+                <div className="bg-[#0a0a0a] p-12 border border-white/5 relative overflow-hidden">
+                   <div className="absolute inset-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2613&auto=format&fit=crop')] bg-cover bg-center grayscale contrast-125 brightness-50"></div>
+                   
+                   <div className="relative z-10 space-y-12">
+                     <div>
+                        <h4 className="font-serif text-2xl text-white mb-6">Headquarters</h4>
+                        <p className="text-gray-400 leading-relaxed font-light">
+                          The Aurelia Studio<br />
+                          1024, Obsidian Tower, 45th Floor<br />
+                          Central Business District<br />
+                          Mumbai, India
+                        </p>
+                     </div>
+                     
+                     <div className="space-y-4">
+                       <div className="flex items-center gap-4 text-gray-300 hover:text-gold-400 transition-colors cursor-pointer">
+                          <Phone size={18} /> <span>+91 98765 43210</span>
+                       </div>
+                       <div className="flex items-center gap-4 text-gray-300 hover:text-gold-400 transition-colors cursor-pointer">
+                          <Mail size={18} /> <span>vision@aurelia.design</span>
+                       </div>
+                       <div className="flex items-center gap-4 text-gray-300 hover:text-gold-400 transition-colors cursor-pointer">
+                          <MapPin size={18} /> <span>View on Maps</span>
+                       </div>
+                     </div>
+                     
+                     <div className="flex gap-6 pt-6">
+                       <Instagram className="text-white/50 hover:text-white cursor-pointer transition-colors" />
+                       <Facebook className="text-white/50 hover:text-white cursor-pointer transition-colors" />
+                       <Linkedin className="text-white/50 hover:text-white cursor-pointer transition-colors" />
+                     </div>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      };
+
+      const Footer = () => (
+        <footer className="py-12 bg-black text-white/30 text-center border-t border-white/5 text-[10px] uppercase tracking-widest cursor-default">
+          <div className="flex justify-center items-center gap-2 mb-4">
+            <span className="text-gold-600">AURELIA</span> © 2024. All Rights Reserved.
+          </div>
+          <div className="flex justify-center gap-8">
+            <a href="#" className="hover:text-white transition-colors cursor-pointer">Privacy</a>
+            <a href="#" className="hover:text-white transition-colors cursor-pointer">Terms</a>
+            <a href="#" className="hover:text-white transition-colors cursor-pointer">Credits</a>
+          </div>
+        </footer>
+      );
+
+      // --- Main App & Render ---
+      const App = () => {
+        return (
+          <main className="bg-obsidian text-marble selection:bg-gold-400 selection:text-black">
+            <CustomCursor />
+            <Navbar />
+            <Hero />
+            <About />
+            <Stats />
+            <Services />
+            <Portfolio />
+            <Process />
+            <Founder />
+            <Testimonials />
+            <Contact />
+            <Footer />
+            <AIArchitect />
+          </main>
+        );
+      };
+
+      const rootElement = document.getElementById('root');
+      if (rootElement) {
+        const root = createRoot(rootElement);
+        root.render(<App />);
+      }
+    </script>
+  </body>
+</html>
